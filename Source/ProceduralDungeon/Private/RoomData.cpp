@@ -6,12 +6,13 @@
 // Please refer to the accompanying LICENSE file for further details.
 
 #include "RoomData.h"
-#include "RoomLevel.h"
 #include "RoomCustomData.h"
 #include "ProceduralDungeonTypes.h"
 #include "ProceduralDungeonUtils.h"
 #include "DoorType.h"
+#if WITH_EDITOR
 #include "FileHelpers.h"
+#endif
 #include "Math/GenericOctree.h" // FBoxCenterAndExtent
 
 #if !USE_LEGACY_DATA_VALIDATION
