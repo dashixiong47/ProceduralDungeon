@@ -12,7 +12,9 @@
 #include "ISinglePropertyView.h"
 #include "ProceduralDungeonEditorCommands.h"
 #include "ProceduralDungeonEditorObject.h"
+#include "ProceduralDungeonEditorSettings.h"
 #include "ProceduralDungeonEdLog.h"
+#include "RoomLevel.h"
 #include "Tools/ProceduralDungeonEditorTool.h"
 
 #define LOCTEXT_NAMESPACE "ProceduralDungeonEditor"
@@ -22,33 +24,65 @@ void FProceduralDungeonEdModeToolkit::Init(const TSharedPtr<class IToolkitHost>&
 	auto NameToCommandMap = FProceduralDungeonEditorCommands::Get().NameToCommandMap;
 
 	TSharedRef<FUICommandList> CommandList = GetToolkitCommands();
-	CommandList->MapAction(NameToCommandMap.FindChecked("Tool_Size"), FUIAction(
-		FExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::OnChangeTool, FName("Tool_Size")),
-		FCanExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolEnabled, FName("Tool_Size")),
-		FIsActionChecked::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolActive, FName("Tool_Size")))
+	CommandList->MapAction(NameToCommandMap.FindChecked("Tool_Size"),
+	                       FUIAction(
+		                       FExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::OnChangeTool, FName("Tool_Size")),
+		                       FCanExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolEnabled, FName("Tool_Size")),
+		                       FIsActionChecked::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolActive, FName("Tool_Size")))
 	);
 
-	CommandList->MapAction(NameToCommandMap.FindChecked("Tool_Door"), FUIAction(
-		FExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::OnChangeTool, FName("Tool_Door")),
-		FCanExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolEnabled, FName("Tool_Door")),
-		FIsActionChecked::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolActive, FName("Tool_Door")))
+	CommandList->MapAction(NameToCommandMap.FindChecked("Tool_Door"),
+	                       FUIAction(
+		                       FExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::OnChangeTool, FName("Tool_Door")),
+		                       FCanExecuteAction::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolEnabled, FName("Tool_Door")),
+		                       FIsActionChecked::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolActive, FName("Tool_Door")))
 	);
+
+	CommandList->MapAction(NameToCommandMap.FindChecked("Tool_Point"),
+	                       FUIAction(
+		                       FExecuteAction::CreateLambda([this]() {
+			                       // 这里写你点击按钮后要执行的代码
+			                       UE_LOG(LogTemp, Log, TEXT("Tool_Point 被点击了"));
+			                       const UProceduralDungeonEditorSettings* EditorSettings = GetDefault<UProceduralDungeonEditorSettings>();
+			                       UClass* DefaultClass = EditorSettings->DefaultPointClass.Get();
+			                       if (!DefaultClass)
+				                       DefaultClass = APoint::StaticClass();
+		                       		FProceduralDungeonEdMode* ProceduralDungeonEdMode = static_cast<FProceduralDungeonEdMode*>(GetEditorMode());
+		                       		URoomData* RoomData=ProceduralDungeonEdMode->GetLevel()->Data;
+			                       UWorld* World = nullptr;
+			                       if (GEditor)
+			                       {
+				                       World = GEditor->GetEditorWorldContext().World();
+				                       if (World && DefaultClass)
+				                       {
+					                       FActorSpawnParameters SpawnParams;
+					                       SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				                       		
+					                       // 设置生成位置，这里示例用零点，你可以换成合适的位置
+					                       FVector SpawnLocation = FVector::ZeroVector;
+					                       FRotator SpawnRotation = FRotator::ZeroRotator;
+
+					                       AActor* NewActor = World->SpawnActor<AActor>(DefaultClass, SpawnLocation, SpawnRotation, SpawnParams);
+				                       		APoint* Point=static_cast<APoint*>(NewActor);
+											Point->PointIndex=RoomData->GetPointIndex();
+					                       if (NewActor) { UE_LOG(LogTemp, Log, TEXT("成功创建Actor: %s"), *NewActor->GetName()); }
+					                       else { UE_LOG(LogTemp, Error, TEXT("创建Actor失败")); }
+				                       }
+			                       }
+		                       }),
+		                       FCanExecuteAction::CreateLambda([]() { return true; }),
+		                       FIsActionChecked::CreateSP(this, &FProceduralDungeonEdModeToolkit::IsToolActive, FName("Tool_Point"))
+	                       ));
 
 	SAssignNew(EdModeWidget, SProceduralDungeonEdModeWidget, SharedThis(this));
 	FModeToolkit::Init(InitToolkitHost);
 }
 
-void FProceduralDungeonEdModeToolkit::GetToolPaletteNames(TArray<FName>& InPaletteName) const
-{
-	InPaletteName.Add(FName("DefaultPalette"));
-}
+void FProceduralDungeonEdModeToolkit::GetToolPaletteNames(TArray<FName>& InPaletteName) const { InPaletteName.Add(FName("DefaultPalette")); }
 
 FText FProceduralDungeonEdModeToolkit::GetToolPaletteDisplayName(FName PaletteName) const
 {
-	if (PaletteName == FName("DefaultPalette"))
-	{
-		return LOCTEXT("Mode.Default", "Default");
-	}
+	if (PaletteName == FName("DefaultPalette")) { return LOCTEXT("Mode.Default", "Default"); }
 	return FText();
 }
 
@@ -60,9 +94,9 @@ void FProceduralDungeonEdModeToolkit::BuildToolPalette(FName Palette, FToolBarBu
 	UProceduralDungeonEditorObject* EditorSettings = GetDungeonEditorMode()->Settings;
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	FSinglePropertyParams Params;
-#if !COMPATIBILITY
+	#if !COMPATIBILITY
 	Params.bHideAssetThumbnail = true;
-#endif
+	#endif
 	Params.NamePlacement = EPropertyNamePlacement::Hidden;
 	TSharedPtr<ISinglePropertyView> SinglePropView = PropertyEditorModule.CreateSingleProperty(EditorSettings, "DoorType", Params);
 
@@ -76,28 +110,23 @@ void FProceduralDungeonEdModeToolkit::BuildToolPalette(FName Palette, FToolBarBu
 			SinglePropView.ToSharedRef()
 		];
 
-	ToolbarBuilder.BeginSection("Default");
+	ToolbarBuilder.BeginSection("Tools");
 	ToolbarBuilder.AddToolBarButton(CommandList.SizeTool);
 	ToolbarBuilder.AddSeparator();
 	ToolbarBuilder.AddToolBarButton(CommandList.DoorTool);
+	ToolbarBuilder.AddToolBarButton(CommandList.PointTool);
+	ToolbarBuilder.EndSection();
+
+	ToolbarBuilder.BeginSection("Settings");
 	ToolbarBuilder.AddWidget(Widget.ToSharedRef());
 	ToolbarBuilder.EndSection();
 }
 
-FEdMode* FProceduralDungeonEdModeToolkit::GetEditorMode() const
-{
-	return GLevelEditorModeTools().GetActiveMode(FProceduralDungeonEdMode::EM_ProceduralDungeon);
-}
+FEdMode* FProceduralDungeonEdModeToolkit::GetEditorMode() const { return GLevelEditorModeTools().GetActiveMode(FProceduralDungeonEdMode::EM_ProceduralDungeon); }
 
-FProceduralDungeonEdMode* FProceduralDungeonEdModeToolkit::GetDungeonEditorMode() const
-{
-	return (FProceduralDungeonEdMode*)GetEditorMode();
-}
+FProceduralDungeonEdMode* FProceduralDungeonEdModeToolkit::GetDungeonEditorMode() const { return (FProceduralDungeonEdMode*)GetEditorMode(); }
 
-TSharedPtr<SWidget> FProceduralDungeonEdModeToolkit::GetInlineContent() const
-{
-	return EdModeWidget;
-}
+TSharedPtr<SWidget> FProceduralDungeonEdModeToolkit::GetInlineContent() const { return EdModeWidget; }
 
 void FProceduralDungeonEdModeToolkit::OnChangeTool(FName ToolName) const
 {
@@ -130,14 +159,8 @@ bool FProceduralDungeonEdModeToolkit::IsToolActive(FName ToolName) const
 	return false;
 }
 
-bool FProceduralDungeonEdModeToolkit::IsDoorTypeEnabled() const
-{
-	return IsToolEnabled("Tool_Door");
-}
+bool FProceduralDungeonEdModeToolkit::IsDoorTypeEnabled() const { return IsToolEnabled("Tool_Door"); }
 
-void FProceduralDungeonEdModeToolkit::OnLevelChanged()
-{
-	EdModeWidget->OnLevelChanged();
-}
+void FProceduralDungeonEdModeToolkit::OnLevelChanged() { EdModeWidget->OnLevelChanged(); }
 
 #undef LOCTEXT_NAMESPACE

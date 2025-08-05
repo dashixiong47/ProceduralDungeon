@@ -11,6 +11,7 @@
 #include "ProceduralDungeonTypes.h"
 #include "ProceduralDungeonUtils.h"
 #include "DoorType.h"
+#include "FileHelpers.h"
 #include "Math/GenericOctree.h" // FBoxCenterAndExtent
 
 #if !USE_LEGACY_DATA_VALIDATION
@@ -213,6 +214,78 @@ bool URoomData::IsRoomInBounds(const FBoxMinAndMax& Bounds, int DoorIndex, const
 	return Bounds.IsInside(RoomBounds);
 }
 
+int32 URoomData::GetPointIndex() const
+{
+	TArray<int32> OutKeys;
+	int32 Expected = 0;
+	
+	PointInfos.GetKeys(OutKeys);
+	if (OutKeys.Num() == 0)
+	{
+		return Expected;
+	}
+	TArray<int32> SortedKeys = OutKeys;
+	SortedKeys.Sort();
+	for (int32 Key : SortedKeys)
+	{
+		if (Key > Expected)
+		{
+			return Expected;  // 找到第一个不连续的数字
+		}
+		Expected++;  // 如果Key == Expected，继续检查下一个
+	}
+
+	return Expected;  // 全部连续，返回最大+1
+}
+
+void URoomData::SetPointInfo(int32 PointIndex, FTransform Transform)
+{
+	if (PointIndex < 0)
+	{
+		return;
+	}
+	FPointInfo& PointInfo=PointInfos.FindOrAdd(PointIndex);
+	PointInfo.Transform = Transform;
+}
+
+FPointInfo URoomData::GetPointInfo(int32 PointIndex)
+{
+	if (PointIndex < 0)
+	{
+		return FPointInfo();
+	}
+	FPointInfo* PointInfo = PointInfos.Find(PointIndex);
+	if (PointInfo)
+	{
+		return *PointInfo;
+	}
+	return FPointInfo();  // Return a default FPointInfo if not found
+}
+#if WITH_EDITOR
+void URoomData::SaveDataAsset()
+{
+
+
+	// 标记 Asset 已被修改
+	this->Modify();
+
+	// 获取 Package
+	UPackage* Package = this->GetOutermost();
+	if (!Package)
+	{
+		return;
+	}
+
+	Package->SetDirtyFlag(true);
+
+	// 保存 Package 到磁盘
+	TArray<UPackage*> PackagesToSave;
+	PackagesToSave.Add(Package);
+
+	FEditorFileUtils::PromptForCheckoutAndSave(PackagesToSave, /*bCheckDirty=*/false, /*bPromptToSave=*/false);
+	UE_LOG( LogTemp, Warning, TEXT("RoomData Asset saved: %s"), *Package->GetName());
+}
+#endif
 #if !(UE_BUILD_SHIPPING) || WITH_EDITOR
 
 bool URoomData::IsDoorValid(int DoorIndex) const

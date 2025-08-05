@@ -26,7 +26,7 @@ public:
 
 	void Construct(const FArguments& InArgs, TSharedRef<FProceduralDungeonEdModeToolkit> InParentToolkit);
 	void OnLevelChanged();
-
+	TWeakObjectPtr<URoomData> GetCachedData();
 protected:
 	bool IsValidRoomLevel(FProceduralDungeonEdMode* EdMode = nullptr, TWeakObjectPtr<ARoomLevel>* OutLevel = nullptr) const;
 	bool IsValidRoomData(FProceduralDungeonEdMode* EdMode, TWeakObjectPtr<URoomData>* OutData = nullptr, TWeakObjectPtr<ARoomLevel>* OutLevel = nullptr) const;
@@ -56,7 +56,7 @@ protected:
 	void OnSelectedActorsChanged(UObject* NewSelectedObject);
 
 	static FLinearColor GetHighlightButtonColor(const FLinearColor& HighlightColor, const FLinearColor& NormalColor = FLinearColor::White, float Speed = 3.0f);
-
+	
 private:
 	TSharedPtr<class SErrorText> Error {nullptr};
 	TSharedPtr<class IDetailsView> DataContentWidget {nullptr};

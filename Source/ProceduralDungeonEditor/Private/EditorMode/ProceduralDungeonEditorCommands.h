@@ -24,6 +24,7 @@ public:
 	// Tools
 	TSharedPtr<FUICommandInfo> SizeTool = nullptr;
 	TSharedPtr<FUICommandInfo> DoorTool = nullptr;
+	TSharedPtr<FUICommandInfo> PointTool = nullptr;
 
 	// Map
 	TMap<FName, TSharedPtr<FUICommandInfo>> NameToCommandMap;

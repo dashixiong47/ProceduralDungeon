@@ -30,6 +30,7 @@ public class ProceduralDungeonEditor : ModuleRules
 				"SlateCore",
 				"Slate",
 				"EditorStyle",
+				"GameplayTags",
 #if UE_5_0_OR_LATER
 				"EditorFramework",
 #endif

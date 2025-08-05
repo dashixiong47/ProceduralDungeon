@@ -11,6 +11,7 @@
 #include "UObject/NoExportTypes.h"
 #include "RoomData.h"
 #include "ProceduralDungeonEdTypes.h"
+#include "EditorMode/Point.h"
 #include "ProceduralDungeonEditorSettings.generated.h"
 
 UCLASS(Config = Editor, DefaultConfig)
@@ -24,6 +25,8 @@ public:
 	// The default RoomData class to use in the class picker when creating a new RoomData asset.
 	UPROPERTY(Config, EditAnywhere, Category = "General", NoClear, meta = (AllowAbstract = false))
 	TSubclassOf<URoomData> DefaultRoomDataClass;
+	UPROPERTY(Config, EditAnywhere, Category = "General", NoClear, meta = (AllowAbstract = false))
+	TSubclassOf<APoint> DefaultPointClass;
 
 	// The class picker will not show if the default RoomData class has no child classes
 	UPROPERTY(Config, EditAnywhere, Category = "General", meta = (DisplayName = "Use Automatically Default Class If No Child"))

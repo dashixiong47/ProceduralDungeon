@@ -8,6 +8,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "ProceduralDungeonTypes.h"
 #include "Misc/EngineVersionComparison.h"
@@ -19,7 +20,15 @@
 #else
 	#define USE_LEGACY_DATA_VALIDATION 0
 #endif
-
+USTRUCT(Blueprintable, BlueprintType)
+struct FPointInfo
+{
+	GENERATED_BODY()
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
+	FTransform Transform;
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
+	FGameplayTag Tag;
+};
 class URoom;
 class UDungeonGraph;
 class URoomCustomData;
@@ -49,6 +58,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Doors")
 	TArray<FDoorDef> Doors {FDoorDef()};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "PointInfos")
+	TMap<int32,FPointInfo> PointInfos;
 
 	UPROPERTY(EditAnywhere, Category = "Room")
 	FIntVector FirstPoint {0};
@@ -109,6 +121,13 @@ public:
 	FVoxelBounds GetVoxelBounds() const;
 
 	bool IsRoomInBounds(const FBoxMinAndMax& Bounds, int DoorIndex, const FDoorDef& DoorDungeonPos) const;
+
+	int32 GetPointIndex() const;
+	void SetPointInfo(int32 PointIndex, FTransform Transform);
+	FPointInfo GetPointInfo(int32 PointIndex);
+	#if WITH_EDITOR
+	void SaveDataAsset();
+	#endif
 
 #if !(UE_BUILD_SHIPPING) || WITH_EDITOR
 	bool IsDoorValid(int DoorIndex) const;

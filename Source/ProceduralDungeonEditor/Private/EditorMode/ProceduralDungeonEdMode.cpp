@@ -6,7 +6,6 @@
 // Please refer to the accompanying LICENSE file for further details.
 
 #include "ProceduralDungeonEdMode.h"
-#include "ProceduralDungeonEditor.h"
 #include "Toolkits/ToolkitManager.h"
 #include "EditorModeManager.h"
 #include "Engine/LevelScriptBlueprint.h"
@@ -23,6 +22,8 @@
 #define ROUTE_TO_TOOL(FuncCall) ActiveTool ? ActiveTool->FuncCall : FEdMode::FuncCall
 
 const FEditorModeID FProceduralDungeonEdMode::EM_ProceduralDungeon(TEXT("EM_ProceduralDungeon"));
+FSimpleDelegate FProceduralDungeonEdMode::OnEnterMode;
+FSimpleDelegate FProceduralDungeonEdMode::OnExitMode;
 
 FProceduralDungeonEdMode::FProceduralDungeonEdMode()
 	: FEdMode()
@@ -54,6 +55,8 @@ void FProceduralDungeonEdMode::Enter()
 
 	// Turn on the flag to force the debug drawings.
 	ARoomLevel::bIsDungeonEditorMode = true;
+	RefreshPoint();
+	OnEnterMode.ExecuteIfBound();
 }
 
 void FProceduralDungeonEdMode::Exit()
@@ -75,6 +78,10 @@ void FProceduralDungeonEdMode::Exit()
 	ARoomLevel::bIsDungeonEditorMode = false;
 
 	FEdMode::Exit();
+	RefreshPoint();
+	
+	OnExitMode.ExecuteIfBound();
+	
 	DungeonEd_LogInfo("Exit Room Editor Mode.");
 }
 
@@ -94,55 +101,25 @@ void FProceduralDungeonEdMode::Tick(FEditorViewportClient* ViewportClient, float
 		ActiveTool->Tick(ViewportClient, DeltaTime);
 }
 
-bool FProceduralDungeonEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProxy* HitProxy, const FViewportClick& Click)
-{
-	return ROUTE_TO_TOOL(HandleClick(InViewportClient, HitProxy, Click));
-}
+bool FProceduralDungeonEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProxy* HitProxy, const FViewportClick& Click) { return ROUTE_TO_TOOL(HandleClick(InViewportClient, HitProxy, Click)); }
 
-bool FProceduralDungeonEdMode::InputKey(FEditorViewportClient* ViewportClient, FViewport* Viewport, FKey Key, EInputEvent Event)
-{
-	return ROUTE_TO_TOOL(InputKey(ViewportClient, Viewport, Key, Event));
-}
+bool FProceduralDungeonEdMode::InputKey(FEditorViewportClient* ViewportClient, FViewport* Viewport, FKey Key, EInputEvent Event) { return ROUTE_TO_TOOL(InputKey(ViewportClient, Viewport, Key, Event)); }
 
-bool FProceduralDungeonEdMode::InputAxis(FEditorViewportClient* InViewportClient, FViewport* Viewport, int32 ControllerId, FKey Key, float Delta, float DeltaTime)
-{
-	return ROUTE_TO_TOOL(InputAxis(InViewportClient, Viewport, ControllerId, Key, Delta, DeltaTime));
-}
+bool FProceduralDungeonEdMode::InputAxis(FEditorViewportClient* InViewportClient, FViewport* Viewport, int32 ControllerId, FKey Key, float Delta, float DeltaTime) { return ROUTE_TO_TOOL(InputAxis(InViewportClient, Viewport, ControllerId, Key, Delta, DeltaTime)); }
 
-bool FProceduralDungeonEdMode::InputDelta(FEditorViewportClient* InViewportClient, FViewport* InViewport, FVector& InDrag, FRotator& InRot, FVector& InScale)
-{
-	return ROUTE_TO_TOOL(InputDelta(InViewportClient, InViewport, InDrag, InRot, InScale));
-}
+bool FProceduralDungeonEdMode::InputDelta(FEditorViewportClient* InViewportClient, FViewport* InViewport, FVector& InDrag, FRotator& InRot, FVector& InScale) { return ROUTE_TO_TOOL(InputDelta(InViewportClient, InViewport, InDrag, InRot, InScale)); }
 
-bool FProceduralDungeonEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 MouseX, int32 MouseY)
-{
-	return ROUTE_TO_TOOL(MouseMove(ViewportClient, Viewport, MouseX, MouseY));
-}
+bool FProceduralDungeonEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 MouseX, int32 MouseY) { return ROUTE_TO_TOOL(MouseMove(ViewportClient, Viewport, MouseX, MouseY)); }
 
-bool FProceduralDungeonEdMode::ShowModeWidgets() const
-{
-	return true;
-}
+bool FProceduralDungeonEdMode::ShowModeWidgets() const { return true; }
 
-bool FProceduralDungeonEdMode::ShouldDrawWidget() const
-{
-	return true;
-}
+bool FProceduralDungeonEdMode::ShouldDrawWidget() const { return true; }
 
-bool FProceduralDungeonEdMode::UsesTransformWidget() const
-{
-	return ROUTE_TO_TOOL(UsesTransformWidget());
-}
+bool FProceduralDungeonEdMode::UsesTransformWidget() const { return ROUTE_TO_TOOL(UsesTransformWidget()); }
 
-bool FProceduralDungeonEdMode::UsesTransformWidget(WidgetMode CheckMode) const
-{
-	return ROUTE_TO_TOOL(UsesTransformWidget(CheckMode));
-}
+bool FProceduralDungeonEdMode::UsesTransformWidget(WidgetMode CheckMode) const { return ROUTE_TO_TOOL(UsesTransformWidget(CheckMode)); }
 
-FVector FProceduralDungeonEdMode::GetWidgetLocation() const
-{
-	return ROUTE_TO_TOOL(GetWidgetLocation());
-}
+FVector FProceduralDungeonEdMode::GetWidgetLocation() const { return ROUTE_TO_TOOL(GetWidgetLocation()); }
 
 bool FProceduralDungeonEdMode::GetPivotForOrbit(FVector& OutPivot) const
 {
@@ -162,10 +139,7 @@ bool FProceduralDungeonEdMode::GetPivotForOrbit(FVector& OutPivot) const
 	return true;
 }
 
-bool FProceduralDungeonEdMode::GetCursor(EMouseCursor::Type& OutCursor) const
-{
-	return ROUTE_TO_TOOL(GetCursor(OutCursor));
-}
+bool FProceduralDungeonEdMode::GetCursor(EMouseCursor::Type& OutCursor) const { return ROUTE_TO_TOOL(GetCursor(OutCursor)); }
 
 bool FProceduralDungeonEdMode::GetTool(FName ToolName, FProceduralDungeonEditorTool*& OutTool) const
 {
@@ -180,10 +154,7 @@ bool FProceduralDungeonEdMode::GetTool(FName ToolName, FProceduralDungeonEditorT
 	return false;
 }
 
-FProceduralDungeonEditorTool* FProceduralDungeonEdMode::GetActiveTool() const
-{
-	return ActiveTool;
-}
+FProceduralDungeonEditorTool* FProceduralDungeonEdMode::GetActiveTool() const { return ActiveTool; }
 
 void FProceduralDungeonEdMode::SetActiveTool(FName ToolName)
 {
@@ -201,10 +172,7 @@ void FProceduralDungeonEdMode::SetActiveTool(FName ToolName)
 	SetActiveTool(NewTool);
 }
 
-void FProceduralDungeonEdMode::ResetActiveTool()
-{
-	SetActiveTool(nullptr);
-}
+void FProceduralDungeonEdMode::ResetActiveTool() { SetActiveTool(nullptr); }
 
 void FProceduralDungeonEdMode::SetActiveTool(FProceduralDungeonEditorTool* NewTool)
 {
@@ -293,10 +261,7 @@ void FProceduralDungeonEdMode::RegisterLevelCompilationDelegate(bool Register)
 
 	if (Register)
 	{
-		if (LevelBlueprintDelegateHandle.IsValid())
-		{
-			DungeonEd_LogWarning("Can't register level blueprint compilation delegate: the delegate is already registered.");
-		}
+		if (LevelBlueprintDelegateHandle.IsValid()) { DungeonEd_LogWarning("Can't register level blueprint compilation delegate: the delegate is already registered."); }
 		else
 		{
 			LevelBlueprintDelegateHandle = CachedLevelBlueprint->OnCompiled().AddRaw(this, &FProceduralDungeonEdMode::OnLevelBlueprintCompiled);
@@ -311,9 +276,49 @@ void FProceduralDungeonEdMode::RegisterLevelCompilationDelegate(bool Register)
 			LevelBlueprintDelegateHandle.Reset();
 			DungeonEd_LogInfo("Unregitered level blueprint compilation delegate.");
 		}
-		else
-		{
-			DungeonEd_LogWarning("Can't unregister level blueprint compilation delegate: the delegate is not registered.");
-		}
+		else { DungeonEd_LogWarning("Can't unregister level blueprint compilation delegate: the delegate is not registered."); }
 	}
+}
+
+void FProceduralDungeonEdMode::RefreshPoint()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	URoomData* RoomData = GetLevel()->Data;
+	if (!RoomData) return;
+
+	TArray<int32> OutKeys;
+	RoomData->PointInfos.GetKeys(OutKeys);
+	TSet<int32> SeenIndices;
+
+	// 移除已有数据 或 写入新数据
+	for (TActorIterator<APoint> It(World); It; ++It)
+	{
+		APoint* Point = *It;
+		if (!Point) continue;
+
+		if (SeenIndices.Contains(Point->PointIndex))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("发现重复 PointIndex：%d"), Point->PointIndex);
+			continue;
+		}
+		SeenIndices.Add(Point->PointIndex);
+
+		if (OutKeys.Contains(Point->PointIndex)) { OutKeys.Remove(Point->PointIndex); }
+		RoomData->SetPointInfo(Point->PointIndex, Point->GetTransform());
+	}
+
+	// 创建缺失的Point
+	for (int32 Key : OutKeys)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		FTransform Transform = RoomData->GetPointInfo(Key).Transform;
+
+		APoint* NewPoint = World->SpawnActor<APoint>(APoint::StaticClass(), Transform, SpawnParams);
+		if (NewPoint) { NewPoint->PointIndex = Key; }
+	}
+	RoomData->SaveDataAsset();
 }

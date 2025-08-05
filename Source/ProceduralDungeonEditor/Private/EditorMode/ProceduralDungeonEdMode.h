@@ -18,7 +18,8 @@ class FProceduralDungeonEdMode : public FEdMode
 {
 public:
 	const static FEditorModeID EM_ProceduralDungeon;
-
+	static FSimpleDelegate  OnEnterMode;
+	static FSimpleDelegate  OnExitMode;
 	FProceduralDungeonEdMode();
 
 	/** FGCObject interface */
@@ -60,6 +61,7 @@ protected:
 	void SetActiveTool(FProceduralDungeonEditorTool* NewTool);
 	void OnLevelBlueprintCompiled(UBlueprint* Blueprint = nullptr);
 	void RegisterLevelCompilationDelegate(bool Register);
+	void RefreshPoint();
 
 public:
 	GC_PTR(class UProceduralDungeonEditorObject) Settings { nullptr };

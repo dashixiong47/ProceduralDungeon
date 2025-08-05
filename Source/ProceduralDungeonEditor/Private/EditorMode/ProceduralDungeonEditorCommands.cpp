@@ -31,6 +31,10 @@ void FProceduralDungeonEditorCommands::RegisterCommands()
 
 	UI_COMMAND(DoorTool, "Door", "Add doors easily by clicking in the viewport.", EUserInterfaceActionType::RadioButton, FInputChord());
 	NameToCommandMap.Add("Tool_Door", DoorTool);
+
+	UI_COMMAND(PointTool, "AddPoint", "添加点位", EUserInterfaceActionType::ToggleButton, FInputChord());
+	NameToCommandMap.Add("Tool_Point", PointTool);
+
 }
 
 #undef LOCTEXT_NAMESPACE

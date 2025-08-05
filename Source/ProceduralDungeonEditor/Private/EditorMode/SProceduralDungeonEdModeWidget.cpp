@@ -637,3 +637,18 @@ FLinearColor SProceduralDungeonEdModeWidget::GetHighlightButtonColor(const FLine
 	float t = FMath::Clamp(FMath::Cos(Speed * seconds), 0.0f, 1.0f);
 	return FMath::Lerp(NormalColor, HighlightColor, t);
 }
+
+TWeakObjectPtr<URoomData> SProceduralDungeonEdModeWidget::GetCachedData()
+{
+	if (CachedData.IsValid())
+		return CachedData;
+
+	auto EdMode = GetEditorMode();
+	if (!IsValidRoomData(EdMode, &CachedData))
+	{
+		DungeonEd_LogError("Cached Data is not valid.");
+		return nullptr;
+	}
+
+	return CachedData;
+}

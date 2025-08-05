@@ -19,11 +19,17 @@ public class ProceduralDungeon : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"NavigationSystem",
+			"GameplayTags", 
 #if UE_5_2_OR_LATER
 			"IrisCore",
 #endif
 		});
-
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] {
+				"EditorSubsystem", "MainFrame","UnrealEd"
+			});
+		}
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"Engine",
 			"CoreUObject",
