@@ -15,9 +15,6 @@ APoint::APoint()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	// 创建一个默认的场景组件作为根组件
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	RootComponent->bAutoActivate = true;
 	#if !WITH_EDITOR
 	bIsEditorOnlyActor = true;
 	#endif

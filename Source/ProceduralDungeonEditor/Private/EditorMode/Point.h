@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "ProceduralDungeonEdMode.h"
+#include "Engine/TargetPoint.h"
 #include "GameFramework/Actor.h"
 #include "Point.generated.h"
 
 
 UCLASS(Blueprintable)
-class PROCEDURALDUNGEONEDITOR_API APoint : public AActor
+class PROCEDURALDUNGEONEDITOR_API APoint : public ATargetPoint
 {
 	GENERATED_BODY()
 
