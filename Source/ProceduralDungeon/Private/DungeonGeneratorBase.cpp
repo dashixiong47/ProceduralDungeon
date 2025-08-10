@@ -27,6 +27,7 @@
 #include "DungeonSaveProxyArchive.h"
 #include "Utils/DungeonSaveUtils.h"
 #include "DrawDebugHelpers.h"
+#include "RoomLevel.h"
 #include "Utils/CompatUtils.h"
 
 #if UE_VERSION_OLDER_THAN(5, 5, 0)
@@ -321,6 +322,21 @@ bool ADungeonGeneratorBase::AddRoomToDungeon(URoom* const& Room, const TArray<in
 	}
 
 	Graph->AddRoom(Room);
+	FTransform DungeonTransform = Room->Generator()->GetDungeonTransform();
+	FVector WorldOffset = DungeonTransform.TransformPositionNoScale(Room->GetTransform().GetLocation());
+
+	TArray<FPointInfo> OffsetPoints;
+	OffsetPoints.Reserve(Room->GetRoomData()->PointInfos.Num()); // 提前分配内存，性能小优化
+
+	for (const TPair<int, FPointInfo>& Pair : Room->GetRoomData()->PointInfos)
+	{
+		FPointInfo ModifiedPoint = Pair.Value;
+		ModifiedPoint.Transform.SetLocation(Pair.Value.Transform.GetLocation() + WorldOffset);
+		ModifiedPoint.Position= Room->GetPosition();
+		OffsetPoints.Add(MoveTemp(ModifiedPoint));
+	}
+
+	Room->SetOffSetPoints(MoveTemp(OffsetPoints));
 	OnRoomAdded(Room->GetRoomData(), Room);
 	return true;
 }
@@ -694,6 +710,7 @@ void ADungeonGeneratorBase::OnGenerationFailed_Implementation()
 
 void ADungeonGeneratorBase::OnRoomAdded_Implementation(const URoomData* NewRoom, const TScriptInterface<IReadOnlyRoom>& RoomInstance)
 {
+	
 	OnRoomAddedEvent.Broadcast(NewRoom, RoomInstance);
 }
 

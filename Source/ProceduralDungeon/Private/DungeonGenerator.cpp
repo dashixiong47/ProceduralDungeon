@@ -83,6 +83,7 @@ bool ADungeonGenerator::CreateDungeon_Implementation()
 			for (URoom* room : newRooms)
 			{
 				roomStack.Push(room);
+				
 			}
 		}
 
@@ -190,7 +191,7 @@ bool ADungeonGenerator::AddNewRooms(URoom& ParentRoom, TArray<URoom*>& AddedRoom
 
 			// Create new room instance from roomdef
 			newRoom = CreateRoomInstance(roomDef);
-
+		
 			// Place the room at targeted door position if possible
 			if (!TryPlaceRoom(newRoom, doorIndex, newRoomDoor, World))
 			{
@@ -215,7 +216,7 @@ bool ADungeonGenerator::AddNewRooms(URoom& ParentRoom, TArray<URoom*>& AddedRoom
 			OnFailedToAddRoom(ParentRoom.GetRoomData(), doorDef);
 		}
 	}
-
+	
 	// Maybe move from plugin settings to generator's variable?
 	const bool bRoomLimitReached = Graph->Count() > Dungeon::RoomLimit();
 	if (bRoomLimitReached)

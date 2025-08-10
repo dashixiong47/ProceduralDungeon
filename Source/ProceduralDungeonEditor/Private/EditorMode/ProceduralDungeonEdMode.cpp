@@ -18,6 +18,7 @@
 #include "Room.h"
 #include "RoomLevel.h"
 #include "RoomData.h"
+#include "Selection.h"
 
 #define ROUTE_TO_TOOL(FuncCall) ActiveTool ? ActiveTool->FuncCall : FEdMode::FuncCall
 
@@ -56,6 +57,11 @@ void FProceduralDungeonEdMode::Enter()
 	// Turn on the flag to force the debug drawings.
 	ARoomLevel::bIsDungeonEditorMode = true;
 	RefreshPoint();
+	if (!bDeleteActorDelegateBound)
+	{
+		FEditorDelegates::OnDeleteActorsBegin.AddRaw(this, &FProceduralDungeonEdMode::HandleActorDeleteBegin);
+		bDeleteActorDelegateBound = true;
+	}
 	OnEnterMode.ExecuteIfBound();
 }
 
@@ -78,10 +84,15 @@ void FProceduralDungeonEdMode::Exit()
 	ARoomLevel::bIsDungeonEditorMode = false;
 
 	FEdMode::Exit();
+	if (bDeleteActorDelegateBound)
+	{
+		FEditorDelegates::OnDeleteActorsBegin.RemoveAll(this);
+		bDeleteActorDelegateBound = false;
+	}
 	RefreshPoint();
-	
+
 	OnExitMode.ExecuteIfBound();
-	
+
 	DungeonEd_LogInfo("Exit Room Editor Mode.");
 }
 
@@ -284,41 +295,80 @@ void FProceduralDungeonEdMode::RefreshPoint()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-
-	URoomData* RoomData = GetLevel()->Data;
+	TWeakObjectPtr<ARoomLevel> Level = GetLevel();
+	if (!Level.IsValid()) return;
+	URoomData* RoomData = Level->Data;
 	if (!RoomData) return;
+	
 
-	TArray<int32> OutKeys;
-	RoomData->PointInfos.GetKeys(OutKeys);
-	TSet<int32> SeenIndices;
+	// 所有合法的索引
+	TSet<int32> ValidPointIndices;
+	RoomData->PointInfos.GetKeys(ValidPointIndices);
+	
+	const UProceduralDungeonEditorSettings* EditorSettings = GetDefault<UProceduralDungeonEditorSettings>();
+	UClass* DefaultClass = EditorSettings->DefaultPointClass.Get();
+	if (!DefaultClass)
+		DefaultClass = APoint::StaticClass();
+	// 已存在的索引
+	TSet<int32> ExistingIndices;
 
-	// 移除已有数据 或 写入新数据
+	// 遍历场景中所有 APoint，删除非法的，记录合法的
 	for (TActorIterator<APoint> It(World); It; ++It)
 	{
+	
 		APoint* Point = *It;
+		
 		if (!Point) continue;
+		if (Point->GetLevel() != World->PersistentLevel)
+			continue; // 忽略非当前主关卡的 APoint
+		UE_LOG(LogTemp, Warning, TEXT("Checking APoint: %d"), It->PointIndex);
+		int32 Index = Point->PointIndex;
 
-		if (SeenIndices.Contains(Point->PointIndex))
+		if (!ValidPointIndices.Contains(Index))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("发现重复 PointIndex：%d"), Point->PointIndex);
+			// 不存在于 RoomData 的，删除
+			GEditor->GetEditorWorldContext().World()->DestroyActor(Point);
 			continue;
 		}
-		SeenIndices.Add(Point->PointIndex);
+		else if (ExistingIndices.Contains(Index))
+		{
+			GEditor->GetEditorWorldContext().World()->DestroyActor(Point);
+			continue;
+		}
 
-		if (OutKeys.Contains(Point->PointIndex)) { OutKeys.Remove(Point->PointIndex); }
-		RoomData->SetPointInfo(Point->PointIndex, Point->GetTransform());
+		// 有效点，记录下
+		ExistingIndices.Add(Index);
+
+		// 更新 Transform 信息（如果需要）
+		RoomData->SetPointInfo(Index, Point->GetTransform());
 	}
-
-	// 创建缺失的Point
-	for (int32 Key : OutKeys)
+	UE_LOG( LogTemp, Log, TEXT("Checked all APoint actors in the world.%d"),ValidPointIndices.Num());
+	// 对于 RoomData 中存在但场景中没有的 Point，创建新的 APoint
+	for (int32 Index : ValidPointIndices)
 	{
+		if (ExistingIndices.Contains(Index)) continue;
+
+		FTransform Transform = RoomData->GetPointInfo(Index).Transform;
+
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		FTransform Transform = RoomData->GetPointInfo(Key).Transform;
-
-		APoint* NewPoint = World->SpawnActor<APoint>(APoint::StaticClass(), Transform, SpawnParams);
-		if (NewPoint) { NewPoint->PointIndex = Key; }
+		APoint* NewPoint = World->SpawnActor<APoint>(DefaultClass, Transform, SpawnParams);
+		if (NewPoint) { NewPoint->PointIndex = Index; }
 	}
+
 	RoomData->SaveDataAsset();
+}
+
+void FProceduralDungeonEdMode::HandleActorDeleteBegin()
+{
+	USelection* SelectedActors = GEditor->GetSelectedActors();
+	for (FSelectionIterator It(*SelectedActors); It; ++It)
+	{
+		AActor* Actor = Cast<AActor>(*It);
+		if (Actor && Actor->IsA<APoint>())
+		{
+			static_cast<APoint*>(Actor)->RemoveDta();
+		}
+	}
 }

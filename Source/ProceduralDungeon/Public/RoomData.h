@@ -20,14 +20,34 @@
 #else
 	#define USE_LEGACY_DATA_VALIDATION 0
 #endif
+UENUM(BlueprintType)
+enum class ETargetType : uint8
+{
+	ETT_Tag        UMETA(DisplayName="Tag"),
+	ETT_StaticMesh UMETA(DisplayName="Static Mesh"),
+	ETT_SkeletalMesh UMETA(DisplayName="Skeletal Mesh"),
+	ETT_Actor      UMETA(DisplayName="Actor"),
+};
+
 USTRUCT(Blueprintable, BlueprintType)
 struct FPointInfo
 {
 	GENERATED_BODY()
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
-	FTransform Transform;
+	ETargetType TargetType = ETargetType::ETT_Tag;
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
+	FTransform Transform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_StaticMesh"))
+	UStaticMesh* StaticMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_SkeletalMesh"))
+	USkeletalMesh* SkeletalMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Actor"))
+	TSubclassOf<AActor> Actor = nullptr;
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Tag"))
 	FGameplayTag Tag;
+	UPROPERTY(BlueprintReadWrite, Category = "Point")
+	FIntVector Position;
+	
 };
 class URoom;
 class UDungeonGraph;
@@ -59,8 +79,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Doors")
 	TArray<FDoorDef> Doors {FDoorDef()};
 	
-	UPROPERTY(EditDefaultsOnly, Category = "PointInfos")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PointInfos")
 	TMap<int32,FPointInfo> PointInfos;
+	UPROPERTY(BlueprintReadOnly, Category = "PointInfos")
+	TArray<FPointInfo> OffSetPoints;
 
 	UPROPERTY(EditAnywhere, Category = "Room")
 	FIntVector FirstPoint {0};
@@ -124,6 +146,7 @@ public:
 
 	int32 GetPointIndex() const;
 	void SetPointInfo(int32 PointIndex, FTransform Transform);
+	void RemovePointInfo(int32 PointIndex);
 	FPointInfo GetPointInfo(int32 PointIndex);
 	#if WITH_EDITOR
 	void SaveDataAsset();

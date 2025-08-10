@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "ProceduralDungeonEdMode.h"
+#include "RoomData.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/Actor.h"
 #include "Point.generated.h"
@@ -19,7 +20,17 @@ public:
 	// Sets default values for this actor's properties
 	APoint();
 	TWeakObjectPtr<URoomData> CachedData;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Point")
 	int32 PointIndex = 0;
+	
+	UPROPERTY()
+	UStaticMeshComponent* StaticMeshComponent=nullptr;
+	UPROPERTY()
+	USkeletalMeshComponent* SkeletalMeshComponent=nullptr;
+	UPROPERTY()
+	AActor* SpawnedActor=nullptr;
+	FDelegateHandle EnterModeHandle;
+	FDelegateHandle ExitModeHandle;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,4 +45,5 @@ public:
 	FProceduralDungeonEdMode* GetProceduralEdMode();
 	UFUNCTION( BlueprintCallable, Category = "ProceduralDungeon")
 	void SaveDta();
+	void RemoveDta();
 };

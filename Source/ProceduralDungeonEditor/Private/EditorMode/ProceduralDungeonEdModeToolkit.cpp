@@ -47,8 +47,8 @@ void FProceduralDungeonEdModeToolkit::Init(const TSharedPtr<class IToolkitHost>&
 			                       UClass* DefaultClass = EditorSettings->DefaultPointClass.Get();
 			                       if (!DefaultClass)
 				                       DefaultClass = APoint::StaticClass();
-		                       		FProceduralDungeonEdMode* ProceduralDungeonEdMode = static_cast<FProceduralDungeonEdMode*>(GetEditorMode());
-		                       		URoomData* RoomData=ProceduralDungeonEdMode->GetLevel()->Data;
+			                       FProceduralDungeonEdMode* ProceduralDungeonEdMode = static_cast<FProceduralDungeonEdMode*>(GetEditorMode());
+			                       URoomData* RoomData = ProceduralDungeonEdMode->GetLevel()->Data;
 			                       UWorld* World = nullptr;
 			                       if (GEditor)
 			                       {
@@ -57,14 +57,16 @@ void FProceduralDungeonEdModeToolkit::Init(const TSharedPtr<class IToolkitHost>&
 				                       {
 					                       FActorSpawnParameters SpawnParams;
 					                       SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				                       		
+
 					                       // 设置生成位置，这里示例用零点，你可以换成合适的位置
 					                       FVector SpawnLocation = FVector::ZeroVector;
 					                       FRotator SpawnRotation = FRotator::ZeroRotator;
 
 					                       AActor* NewActor = World->SpawnActor<AActor>(DefaultClass, SpawnLocation, SpawnRotation, SpawnParams);
-				                       		APoint* Point=static_cast<APoint*>(NewActor);
-											Point->PointIndex=RoomData->GetPointIndex();
+					                       APoint* Point = static_cast<APoint*>(NewActor);
+					                       Point->PointIndex = RoomData->GetPointIndex();
+					                       RoomData->SetPointInfo(Point->PointIndex, Point->GetTransform());
+					                       RoomData->Modify();
 					                       if (NewActor) { UE_LOG(LogTemp, Log, TEXT("成功创建Actor: %s"), *NewActor->GetName()); }
 					                       else { UE_LOG(LogTemp, Error, TEXT("创建Actor失败")); }
 				                       }

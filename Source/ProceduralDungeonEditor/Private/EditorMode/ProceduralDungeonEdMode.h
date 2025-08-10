@@ -62,6 +62,8 @@ protected:
 	void OnLevelBlueprintCompiled(UBlueprint* Blueprint = nullptr);
 	void RegisterLevelCompilationDelegate(bool Register);
 	void RefreshPoint();
+	/** 删除回调函数 **/
+	void HandleActorDeleteBegin();
 
 public:
 	GC_PTR(class UProceduralDungeonEditorObject) Settings { nullptr };
@@ -72,4 +74,5 @@ private:
 	TWeakObjectPtr<ARoomLevel> CachedLevelInstance = nullptr;
 	TWeakObjectPtr<ULevelScriptBlueprint> CachedLevelBlueprint = nullptr;
 	FDelegateHandle LevelBlueprintDelegateHandle;
+	bool bDeleteActorDelegateBound = false;
 };

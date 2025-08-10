@@ -256,6 +256,8 @@ public:
 	void SetPositionFromDoor(int DoorIndex, FIntVector WorldPos);
 	void SetPositionAndRotationFromDoor(int DoorIndex, FIntVector WorldPos, EDoorDirection WorldRot);
 	bool IsOccupied(FIntVector Cell);
+	TArray<FPointInfo>& GetOffSetPoints() { return RoomData->OffSetPoints; }
+	void SetOffSetPoints(const TArray<FPointInfo>& OffSetPoints) { RoomData->OffSetPoints = OffSetPoints; }
 
 	FTransform GetTransform() const;
 	FBoxCenterAndExtent GetBounds() const;

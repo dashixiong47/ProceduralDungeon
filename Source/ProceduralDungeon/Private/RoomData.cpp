@@ -249,6 +249,22 @@ void URoomData::SetPointInfo(int32 PointIndex, FTransform Transform)
 	PointInfo.Transform = Transform;
 }
 
+void URoomData::RemovePointInfo(int32 PointIndex)
+{
+	if (PointIndex < 0)
+	{
+		return;
+	}
+	if (PointInfos.Contains(PointIndex))
+	{
+		PointInfos.Remove(PointIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to remove PointInfo for index %d, but it does not exist."), PointIndex);
+	}
+}
+
 FPointInfo URoomData::GetPointInfo(int32 PointIndex)
 {
 	if (PointIndex < 0)
