@@ -337,7 +337,7 @@ bool ADungeonGeneratorBase::AddRoomToDungeon(URoom* const& Room, const TArray<in
 	}
 
 	Room->SetOffSetPoints(MoveTemp(OffsetPoints));
-	OnRoomAdded(Room->GetRoomData(), Room);
+	OnRoomAdded(Room->GetRoomData());
 	return true;
 }
 
@@ -708,10 +708,10 @@ void ADungeonGeneratorBase::OnGenerationFailed_Implementation()
 	OnGenerationFailedEvent.Broadcast();
 }
 
-void ADungeonGeneratorBase::OnRoomAdded_Implementation(const URoomData* NewRoom, const TScriptInterface<IReadOnlyRoom>& RoomInstance)
+void ADungeonGeneratorBase::OnRoomAdded_Implementation(const URoomData* NewRoom)
 {
 	
-	OnRoomAddedEvent.Broadcast(NewRoom, RoomInstance);
+	OnRoomAddedEvent.Broadcast(NewRoom);
 }
 
 void ADungeonGeneratorBase::OnFailedToAddRoom_Implementation(const URoomData* FromRoom, const FDoorDef& FromDoor)
