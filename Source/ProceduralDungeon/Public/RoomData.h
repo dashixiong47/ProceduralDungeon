@@ -167,7 +167,7 @@ public:
 
 	FRoomDataEditorEvent OnPropertiesChanged;
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
+	
 #endif // WITH_EDITOR
 
 private:

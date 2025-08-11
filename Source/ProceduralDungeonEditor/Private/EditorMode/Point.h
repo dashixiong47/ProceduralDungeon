@@ -22,7 +22,8 @@ public:
 	TWeakObjectPtr<URoomData> CachedData;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Point")
 	int32 PointIndex = 0;
-	
+	FPointInfo* PointInfo=nullptr;
+	FPointInfo* LastPointInfo=nullptr;
 	UPROPERTY()
 	UStaticMeshComponent* StaticMeshComponent=nullptr;
 	UPROPERTY()
@@ -37,7 +38,7 @@ protected:
 	virtual void PostEditMove(bool bFinished) override;
 	
 #if WITH_EDITOR
-	virtual void PostInitProperties() override;
+	virtual void PostRegisterAllComponents() override;
 #endif
 public:
 	// Called every frame
@@ -46,4 +47,11 @@ public:
 	UFUNCTION( BlueprintCallable, Category = "ProceduralDungeon")
 	void SaveDta();
 	void RemoveDta();
+	void OnRoomDataPropertyChanged(URoomData* RoomData);
+	UFUNCTION()
+	void OnEnter();
+	UFUNCTION()
+	void OnExit();
+	void SetMesh();
+	static bool ArePointInfosEqual(const FPointInfo* NewInfo, const FPointInfo* OldInfo);
 };

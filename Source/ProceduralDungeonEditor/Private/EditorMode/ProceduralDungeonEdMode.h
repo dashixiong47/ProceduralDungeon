@@ -18,8 +18,8 @@ class FProceduralDungeonEdMode : public FEdMode
 {
 public:
 	const static FEditorModeID EM_ProceduralDungeon;
-	static FSimpleDelegate  OnEnterMode;
-	static FSimpleDelegate  OnExitMode;
+	static FSimpleMulticastDelegate  OnEnterMode;
+	static FSimpleMulticastDelegate  OnExitMode;
 	FProceduralDungeonEdMode();
 
 	/** FGCObject interface */

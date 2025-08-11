@@ -23,8 +23,8 @@
 #define ROUTE_TO_TOOL(FuncCall) ActiveTool ? ActiveTool->FuncCall : FEdMode::FuncCall
 
 const FEditorModeID FProceduralDungeonEdMode::EM_ProceduralDungeon(TEXT("EM_ProceduralDungeon"));
-FSimpleDelegate FProceduralDungeonEdMode::OnEnterMode;
-FSimpleDelegate FProceduralDungeonEdMode::OnExitMode;
+FSimpleMulticastDelegate FProceduralDungeonEdMode::OnEnterMode;
+FSimpleMulticastDelegate FProceduralDungeonEdMode::OnExitMode;
 
 FProceduralDungeonEdMode::FProceduralDungeonEdMode()
 	: FEdMode()
@@ -62,7 +62,7 @@ void FProceduralDungeonEdMode::Enter()
 		FEditorDelegates::OnDeleteActorsBegin.AddRaw(this, &FProceduralDungeonEdMode::HandleActorDeleteBegin);
 		bDeleteActorDelegateBound = true;
 	}
-	OnEnterMode.ExecuteIfBound();
+	OnEnterMode.Broadcast();
 }
 
 void FProceduralDungeonEdMode::Exit()
@@ -91,7 +91,7 @@ void FProceduralDungeonEdMode::Exit()
 	}
 	RefreshPoint();
 
-	OnExitMode.ExecuteIfBound();
+	OnExitMode.Broadcast();
 
 	DungeonEd_LogInfo("Exit Room Editor Mode.");
 }
@@ -321,7 +321,6 @@ void FProceduralDungeonEdMode::RefreshPoint()
 		if (!Point) continue;
 		if (Point->GetLevel() != World->PersistentLevel)
 			continue; // 忽略非当前主关卡的 APoint
-		UE_LOG(LogTemp, Warning, TEXT("Checking APoint: %d"), It->PointIndex);
 		int32 Index = Point->PointIndex;
 
 		if (!ValidPointIndices.Contains(Index))
@@ -342,7 +341,6 @@ void FProceduralDungeonEdMode::RefreshPoint()
 		// 更新 Transform 信息（如果需要）
 		RoomData->SetPointInfo(Index, Point->GetTransform());
 	}
-	UE_LOG( LogTemp, Log, TEXT("Checked all APoint actors in the world.%d"),ValidPointIndices.Num());
 	// 对于 RoomData 中存在但场景中没有的 Point，创建新的 APoint
 	for (int32 Index : ValidPointIndices)
 	{
