@@ -61,7 +61,7 @@ void FProceduralDungeonEdMode::Enter()
 	{
 		FEditorDelegates::OnDeleteActorsBegin.AddRaw(this, &FProceduralDungeonEdMode::HandleActorDeleteBegin);
 		bDeleteActorDelegateBound = true;
-	}
+	}	
 	OnEnterMode.Broadcast();
 }
 

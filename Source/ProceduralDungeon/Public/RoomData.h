@@ -47,6 +47,9 @@ struct FPointInfo
 	FGameplayTag Tag;
 	UPROPERTY(BlueprintReadWrite, Category = "Point")
 	FIntVector Position;
+	// 生成几率
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(ClampMin="0.00", ClampMax="1.00", UIMin="0.00", UIMax="1.00"))
+	float Probability = 1.0f;
 	
 };
 class URoom;

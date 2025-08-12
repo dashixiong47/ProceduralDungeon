@@ -323,16 +323,28 @@ bool ADungeonGeneratorBase::AddRoomToDungeon(URoom* const& Room, const TArray<in
 
 	Graph->AddRoom(Room);
 	FTransform DungeonTransform = Room->Generator()->GetDungeonTransform();
-	FVector WorldOffset = DungeonTransform.TransformPositionNoScale(Room->GetTransform().GetLocation());
+	FTransform RoomTransform = Room->GetTransform();
 
 	TArray<FPointInfo> OffsetPoints;
-	OffsetPoints.Reserve(Room->GetRoomData()->PointInfos.Num()); // 提前分配内存，性能小优化
+	OffsetPoints.Reserve(Room->GetRoomData()->PointInfos.Num());
 
 	for (const TPair<int, FPointInfo>& Pair : Room->GetRoomData()->PointInfos)
 	{
 		FPointInfo ModifiedPoint = Pair.Value;
-		ModifiedPoint.Transform.SetLocation(Pair.Value.Transform.GetLocation() + WorldOffset);
-		ModifiedPoint.Position= Room->GetPosition();
+		FVector LocalPoint = Pair.Value.Transform.GetLocation(); // 点在房间局部坐标
+
+		// 先把点从房间局部 -> 地牢局部（包含房间的位置和旋转）
+		FVector DungeonSpacePoint = RoomTransform.TransformPositionNoScale(LocalPoint);
+
+		// 再把地牢局部 -> 世界（包含 DungeonTransform 的旋转和平移）
+		FVector WorldPoint = DungeonTransform.TransformPositionNoScale(DungeonSpacePoint);
+		
+		ModifiedPoint.Transform.SetLocation(WorldPoint);
+		
+		FQuat WorldRot = DungeonTransform.GetRotation() * RoomTransform.GetRotation() * Pair.Value.Transform.GetRotation();
+		ModifiedPoint.Transform.SetRotation(WorldRot);
+		
+		ModifiedPoint.Position = Room->GetPosition();
 		OffsetPoints.Add(MoveTemp(ModifiedPoint));
 	}
 

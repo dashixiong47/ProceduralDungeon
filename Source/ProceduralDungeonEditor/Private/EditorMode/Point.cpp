@@ -15,6 +15,7 @@ APoint::APoint()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	#if WITH_EDITOR
 	if (GIsEditor && !IsRunningGame())
 	{
 		StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
@@ -23,6 +24,7 @@ APoint::APoint()
 		SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
 		SkeletalMeshComponent->SetupAttachment(RootComponent);
 	}
+	#endif
 	#if !WITH_EDITOR
 	bIsEditorOnlyActor = true;
 	#endif
@@ -30,6 +32,7 @@ APoint::APoint()
 #if WITH_EDITOR
 void APoint::PostRegisterAllComponents()
 {
+	
 	if (GIsEditor && !IsRunningGame())
 	{
 		// 只在编辑器模式下执行（非游戏运行）
@@ -44,9 +47,33 @@ void APoint::PostRegisterAllComponents()
 		}
 	}
 }
+
+void APoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	// 获取被修改的属性名
+	FName PropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(APoint, Probability))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->Probability = Probability;
+				CachedData->Modify();
+			}
+		}
+	}
+}
 #endif
 // Called when the game starts or when spawned
-void APoint::BeginPlay() { Super::BeginPlay(); }
+void APoint::BeginPlay()
+{
+	Super::BeginPlay();
+	// 销毁
+	this->Destroy();
+}
 
 void APoint::PostEditMove(bool bFinished)
 {
@@ -66,19 +93,6 @@ FProceduralDungeonEdMode* APoint::GetProceduralEdMode()
 }
 
 
-void APoint::SaveDta()
-{
-	auto Result = FEditorFileUtils::PromptForCheckoutAndSave(
-		{CachedData->GetPackage()},
-		// 保存这个 RoomData 所在的包（UAsset 文件）
-		/*bCheckDirty=*/
-		true,
-		// 只保存被修改过的资源
-		/*bPromptToSave=*/
-		true // 不弹出保存提示框
-	);
-}
-
 void APoint::RemoveDta()
 {
 	CachedData->RemovePointInfo(PointIndex);
@@ -87,13 +101,21 @@ void APoint::RemoveDta()
 
 void APoint::OnRoomDataPropertyChanged(URoomData* RoomData)
 {
-	
-	UE_LOG(LogTemp, Warning, TEXT("Point: OnRoomDataPropertyChanged called for PointIndex %d"), PointIndex);
+	if (!CachedData->PointInfos.Contains(PointIndex))
+	{
+		Destroy();
+		UE_LOG( LogTemp, Warning, TEXT("Point Index %d 不存在于 RoomData 中，已删除该 Point"), PointIndex);
+		return;
+	}
+	LastPointInfo=PointInfo;
+	PointInfo = CachedData->PointInfos.Find(PointIndex);
 	SetMesh();
+	Probability=PointInfo->Probability;
 }
 
 void APoint::OnEnter()
 {
+
 	if (!this)return;
 	FProceduralDungeonEdMode* EdMode = GetProceduralEdMode();
 	if (EdMode->GetID() != FProceduralDungeonEdMode::EM_ProceduralDungeon)return;
@@ -106,12 +128,16 @@ void APoint::OnEnter()
 	// 监听所有对象属性变化
 	CachedData->OnPropertiesChanged.RemoveAll(this);
 	CachedData->OnPropertiesChanged.AddUObject(this, &APoint::OnRoomDataPropertyChanged);
+	LastPointInfo=PointInfo;
+	PointInfo = CachedData->PointInfos.Find(PointIndex);
 	
+	Probability=PointInfo->Probability;
 	SetMesh();
 }
 
 void APoint::OnExit()
 {
+	if (!CachedData.IsValid())return;
 	CachedData->OnPropertiesChanged.RemoveAll(this);
 	CachedData = nullptr;
 	UE_LOG(LogTemp, Warning, TEXT("print:退出编辑模式 Point"));
@@ -119,8 +145,6 @@ void APoint::OnExit()
 
 void APoint::SetMesh()
 {
-	LastPointInfo=PointInfo;
-	PointInfo = CachedData->PointInfos.Find(PointIndex);
 	if (ArePointInfosEqual(LastPointInfo,PointInfo))return;
 	if (PointInfo)
 	{
@@ -190,10 +214,10 @@ bool APoint::ArePointInfosEqual(const FPointInfo* NewInfo, const FPointInfo* Old
 	if (NewInfo||OldInfo)return false; // 如果有一个为空，直接返回false
 	if (NewInfo->TargetType != OldInfo->TargetType)
 		return false;
-
 	switch (NewInfo->TargetType)
 	{
 	case ETargetType::ETT_StaticMesh:
+		
 		return NewInfo->StaticMesh == OldInfo->StaticMesh;
 
 	case ETargetType::ETT_SkeletalMesh:
@@ -209,4 +233,14 @@ bool APoint::ArePointInfosEqual(const FPointInfo* NewInfo, const FPointInfo* Old
 	default:
 		return false;
 	}
+}
+
+void APoint::Init(int32 Index)
+{
+	FProceduralDungeonEdMode::OnEnterMode.RemoveAll(this);
+	FProceduralDungeonEdMode::OnExitMode.RemoveAll(this);
+	EnterModeHandle = FProceduralDungeonEdMode::OnEnterMode.AddUObject(this, &APoint::OnEnter);
+	ExitModeHandle = FProceduralDungeonEdMode::OnExitMode.AddUObject(this, &APoint::OnExit);
+	PointIndex = Index;
+	OnEnter();
 }

@@ -64,9 +64,10 @@ void FProceduralDungeonEdModeToolkit::Init(const TSharedPtr<class IToolkitHost>&
 
 					                       AActor* NewActor = World->SpawnActor<AActor>(DefaultClass, SpawnLocation, SpawnRotation, SpawnParams);
 					                       APoint* Point = static_cast<APoint*>(NewActor);
-					                       Point->PointIndex = RoomData->GetPointIndex();
-					                       RoomData->SetPointInfo(Point->PointIndex, Point->GetTransform());
+					                       int32 Index=	RoomData->GetPointIndex();
+					                       RoomData->SetPointInfo(Index, Point->GetTransform());
 					                       RoomData->Modify();
+					                       Point->Init(Index);
 					                       if (NewActor) { UE_LOG(LogTemp, Log, TEXT("成功创建Actor: %s"), *NewActor->GetName()); }
 					                       else { UE_LOG(LogTemp, Error, TEXT("创建Actor失败")); }
 				                       }
