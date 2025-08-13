@@ -22,10 +22,10 @@ public:
 	TWeakObjectPtr<URoomData> CachedData;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Point")
 	int32 PointIndex = 0;
-	
-	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(ClampMin="0.00", ClampMax="1.00", UIMin="0.00", UIMax="1.00"))
-	float Probability=1;
-	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
+	#if WITH_EDITOR
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(ClampMin="0.00", ClampMax="1.00", UIMin="0.00", UIMax="1.00"))
+	float Probability = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point")
 	ETargetType TargetType = ETargetType::ETT_Tag;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_StaticMesh"))
 	UStaticMesh* StaticMesh = nullptr;
@@ -33,31 +33,35 @@ public:
 	USkeletalMesh* SkeletalMesh = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Actor"))
 	TSubclassOf<AActor> Actor = nullptr;
-	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Tag"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Tag"))
 	FGameplayTag Tag;
-	
-	FPointInfo* PointInfo=nullptr;
-	FPointInfo* LastPointInfo=nullptr;
+
+	FPointInfo* PointInfo = nullptr;
+	FPointInfo* LastPointInfo = nullptr;
 	UPROPERTY()
-	UStaticMeshComponent* StaticMeshComponent=nullptr;
+	UStaticMeshComponent* StaticMeshComponent = nullptr;
 	UPROPERTY()
-	USkeletalMeshComponent* SkeletalMeshComponent=nullptr;
+	USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
 	UPROPERTY()
-	AActor* SpawnedActor=nullptr;
+	AActor* SpawnedActor = nullptr;
 	FDelegateHandle EnterModeHandle;
 	FDelegateHandle ExitModeHandle;
+	#endif
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	#if WITH_EDITOR
 	virtual void PostEditMove(bool bFinished) override;
-	
-#if WITH_EDITOR
 	virtual void PostRegisterAllComponents() override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
+	#endif
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	#if WITH_EDITOR
 	FProceduralDungeonEdMode* GetProceduralEdMode();
 	void RemoveDta();
 	void OnRoomDataPropertyChanged(URoomData* RoomData);
@@ -68,4 +72,8 @@ public:
 	void SetMesh();
 	static bool ArePointInfosEqual(const FPointInfo* NewInfo, const FPointInfo* OldInfo);
 	void Init(int32 Index);
+	#endif
+
+	UFUNCTION( BlueprintImplementableEvent)
+	void OnVisibilityChangedEvent(ARoomLevel* RoomLevel,bool bNewVisibility);
 };

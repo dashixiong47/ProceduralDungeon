@@ -324,7 +324,7 @@ bool ADungeonGeneratorBase::AddRoomToDungeon(URoom* const& Room, const TArray<in
 	Graph->AddRoom(Room);
 	FTransform DungeonTransform = Room->Generator()->GetDungeonTransform();
 	FTransform RoomTransform = Room->GetTransform();
-
+	// Room->GetLevelScript()
 	TArray<FPointInfo> OffsetPoints;
 	OffsetPoints.Reserve(Room->GetRoomData()->PointInfos.Num());
 
@@ -722,7 +722,6 @@ void ADungeonGeneratorBase::OnGenerationFailed_Implementation()
 
 void ADungeonGeneratorBase::OnRoomAdded_Implementation(const URoomData* NewRoom)
 {
-	
 	OnRoomAddedEvent.Broadcast(NewRoom);
 }
 

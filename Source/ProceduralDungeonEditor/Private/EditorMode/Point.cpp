@@ -4,11 +4,8 @@
 #include "Point.h"
 
 #include "EditorModeManager.h"
-#include "FileHelpers.h"
-#include "ProceduralDungeonEdModeToolkit.h"
 #include "RoomData.h"
 #include "RoomLevel.h"
-#include "SProceduralDungeonEdModeWidget.h"
 
 
 // Sets default values
@@ -17,23 +14,17 @@ APoint::APoint()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	#if WITH_EDITOR
-	if (GIsEditor && !IsRunningGame())
-	{
-		StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-		StaticMeshComponent->SetupAttachment(RootComponent);
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	StaticMeshComponent->SetupAttachment(RootComponent);
 
-		SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
-		SkeletalMeshComponent->SetupAttachment(RootComponent);
-	}
+	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
+	SkeletalMeshComponent->SetupAttachment(RootComponent);
 	#endif
-	#if !WITH_EDITOR
-	bIsEditorOnlyActor = true;
-	#endif
+	
 }
 #if WITH_EDITOR
 void APoint::PostRegisterAllComponents()
 {
-	
 	
 	if (GIsEditor && !IsRunningGame())
 	{
@@ -118,15 +109,6 @@ void APoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 		}
 	}
 }
-#endif
-// Called when the game starts or when spawned
-void APoint::BeginPlay()
-{
-	Super::BeginPlay();
-	// 销毁
-	this->Destroy();
-}
-
 void APoint::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
@@ -134,10 +116,29 @@ void APoint::PostEditMove(bool bFinished)
 	CachedData->SetPointInfo(PointIndex, this->GetTransform());
 	CachedData->Modify();
 }
+#endif
+// Called when the game starts or when spawned
+void APoint::BeginPlay()
+{
+	Super::BeginPlay();
+	ARoomLevel* RoomLevel=Cast<ARoomLevel>(GetLevel()->GetLevelScriptActor());
+	FPointInfo* RuntimePointInfo=RoomLevel->Data->PointInfos.Find(PointIndex);
+	if (!RuntimePointInfo)return;
+	RoomLevel->VisibilityChangedEvent.AddDynamic(this,&APoint::OnVisibilityChangedEvent);
+	UE_LOG( LogTemp, Warning, TEXT("Point BeginPlay: %s %s"), *GetName(),*RoomLevel->GetName() );
+}
+
+void APoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	ARoomLevel* RoomLevel=Cast<ARoomLevel>(GetLevel()->GetLevelScriptActor());
+	RoomLevel->VisibilityChangedEvent.RemoveDynamic(this,&APoint::OnVisibilityChangedEvent);
+}
+
 
 // Called every frame
 void APoint::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
-
+#if WITH_EDITOR
 FProceduralDungeonEdMode* APoint::GetProceduralEdMode()
 {
 	FEditorModeTools& ModeTools = GLevelEditorModeTools();
@@ -301,3 +302,4 @@ void APoint::Init(int32 Index)
 	PointIndex = Index;
 	OnEnter();
 }
+#endif
