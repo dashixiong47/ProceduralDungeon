@@ -67,8 +67,9 @@ ARoomLevel* UStaticRoomVisibilityComponent::GetOwnerRoomLevel() const
 	ULevel* Level = GetOwner()->GetLevel();
 	if (!IsValid(Level))
 		return nullptr;
-
-	return Cast<ARoomLevel>(Level->GetLevelScriptActor());
+	ARoomLevel* RoomLevel=Cast<ARoomLevel>(Level->GetLevelScriptActor());
+	UE_LOG( LogTemp, Warning, TEXT("GetOwnerRoomLevel: %s"), *GetNameSafe(RoomLevel));
+	return RoomLevel;
 }
 
 void UStaticRoomVisibilityComponent::UpdateVisibility()
@@ -110,12 +111,13 @@ void UStaticRoomVisibilityComponent::RegisterVisibilityDelegate(ARoomLevel* Room
 {
 	if (!IsValid(RoomLevel))
 		return;
-
+	
 	if (Register)
 		RoomLevel->VisibilityChangedEvent.AddDynamic(this, &UStaticRoomVisibilityComponent::RoomVisibilityChanged);
 	else
 		RoomLevel->VisibilityChangedEvent.RemoveDynamic(this, &UStaticRoomVisibilityComponent::RoomVisibilityChanged);
 
+	
 	SetVisible(RoomLevel, RoomLevel->IsVisible());
 }
 

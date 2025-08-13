@@ -22,8 +22,20 @@ public:
 	TWeakObjectPtr<URoomData> CachedData;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Point")
 	int32 PointIndex = 0;
+	
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(ClampMin="0.00", ClampMax="1.00", UIMin="0.00", UIMax="1.00"))
 	float Probability=1;
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point")
+	ETargetType TargetType = ETargetType::ETT_Tag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_StaticMesh"))
+	UStaticMesh* StaticMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_SkeletalMesh"))
+	USkeletalMesh* SkeletalMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Actor"))
+	TSubclassOf<AActor> Actor = nullptr;
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Point", meta=(EditCondition="TargetType == ETargetType::ETT_Tag"))
+	FGameplayTag Tag;
+	
 	FPointInfo* PointInfo=nullptr;
 	FPointInfo* LastPointInfo=nullptr;
 	UPROPERTY()

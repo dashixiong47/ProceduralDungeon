@@ -7,6 +7,7 @@
 #include "FileHelpers.h"
 #include "ProceduralDungeonEdModeToolkit.h"
 #include "RoomData.h"
+#include "RoomLevel.h"
 #include "SProceduralDungeonEdModeWidget.h"
 
 
@@ -32,6 +33,7 @@ APoint::APoint()
 #if WITH_EDITOR
 void APoint::PostRegisterAllComponents()
 {
+	
 	
 	if (GIsEditor && !IsRunningGame())
 	{
@@ -61,6 +63,56 @@ void APoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 			if (PointInfo)
 			{
 				PointInfo->Probability = Probability;
+				CachedData->Modify();
+			}
+		}
+	}else if ( PropertyName == GET_MEMBER_NAME_CHECKED(APoint, TargetType))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->TargetType = TargetType;
+				CachedData->Modify();
+			}
+		}
+	}else if (PropertyName == GET_MEMBER_NAME_CHECKED(APoint, StaticMesh))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->StaticMesh = StaticMesh;
+				CachedData->Modify();
+			}
+		}
+	}else if ( PropertyName == GET_MEMBER_NAME_CHECKED(APoint, SkeletalMesh))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->SkeletalMesh = SkeletalMesh;
+				CachedData->Modify();
+			}
+		}
+	}else if( PropertyName == GET_MEMBER_NAME_CHECKED(APoint, Actor))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->Actor = Actor;
+				CachedData->Modify();
+			}
+		}
+	}else if ( PropertyName == GET_MEMBER_NAME_CHECKED(APoint, Tag))
+	{
+		if (CachedData.IsValid())
+		{
+			if (PointInfo)
+			{
+				PointInfo->Tag = Tag;
 				CachedData->Modify();
 			}
 		}
@@ -109,22 +161,22 @@ void APoint::OnRoomDataPropertyChanged(URoomData* RoomData)
 	}
 	LastPointInfo=PointInfo;
 	PointInfo = CachedData->PointInfos.Find(PointIndex);
-	SetMesh();
 	Probability=PointInfo->Probability;
+	TargetType=PointInfo->TargetType;
+	StaticMesh=PointInfo->StaticMesh;
+	SkeletalMesh=PointInfo->SkeletalMesh;
+	Actor=PointInfo->Actor;
+	Tag=PointInfo->Tag;
+	SetMesh();
 }
 
 void APoint::OnEnter()
 {
 
 	if (!this)return;
-	FProceduralDungeonEdMode* EdMode = GetProceduralEdMode();
-	if (EdMode->GetID() != FProceduralDungeonEdMode::EM_ProceduralDungeon)return;
-	TSharedPtr<FModeToolkit> MToolkit = EdMode->GetToolkit();
-	TSharedPtr<FProceduralDungeonEdModeToolkit> Toolkit = StaticCastSharedPtr<FProceduralDungeonEdModeToolkit>(MToolkit);
-	TSharedPtr<class SWidget> Widget = Toolkit->GetInlineContent();
-	TSharedRef<SProceduralDungeonEdModeWidget> MyWidget = StaticCastSharedRef<SProceduralDungeonEdModeWidget>(Toolkit->GetInlineContent().ToSharedRef());
-
-	CachedData = MyWidget->GetCachedData();
+	ALevelScriptActor*  LevelScriptActor=GetLevel()->GetLevelScriptActor();
+	ARoomLevel* RoomLevel=Cast<ARoomLevel>(LevelScriptActor);
+	CachedData = RoomLevel->Data;
 	// 监听所有对象属性变化
 	CachedData->OnPropertiesChanged.RemoveAll(this);
 	CachedData->OnPropertiesChanged.AddUObject(this, &APoint::OnRoomDataPropertyChanged);
@@ -132,6 +184,11 @@ void APoint::OnEnter()
 	PointInfo = CachedData->PointInfos.Find(PointIndex);
 	
 	Probability=PointInfo->Probability;
+	TargetType=PointInfo->TargetType;
+	StaticMesh=PointInfo->StaticMesh;
+	SkeletalMesh=PointInfo->SkeletalMesh;
+	Actor=PointInfo->Actor;
+	Tag=PointInfo->Tag;
 	SetMesh();
 }
 
