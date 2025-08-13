@@ -18,7 +18,7 @@
 #include "DungeonGeneratorBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGenerationEvent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRoomEvent, const URoomData*, Room, const TScriptInterface<IReadOnlyRoom>&, RoomInstance);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRoomEvent, const URoomData*, Room);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRoomDoorEvent, const URoomData*, Room, const FDoorDef&, Door);
 
 class ADoor;
@@ -156,7 +156,7 @@ public:
 	// @param NewRoom The room data successfully added to the dungeon [DEPRECATED: will be removed in future version, use RoomInstance->GetRoomData instead]
 	// @param RoomInstance The room successfully added to the dungeon
 	UFUNCTION(BlueprintNativeEvent, Category = "Dungeon Generator", meta = (DisplayName = "On Room Added"))
-	void OnRoomAdded(const URoomData* NewRoom, const TScriptInterface<IReadOnlyRoom>& RoomInstance);
+	void OnRoomAdded(const URoomData* NewRoom);
 
 	// Called each time no room could have been placed at a door (all room placement tries have been exhausted).
 	UFUNCTION(BlueprintNativeEvent, Category = "Dungeon Generator", meta = (DisplayName = "Failed To Add Room"))

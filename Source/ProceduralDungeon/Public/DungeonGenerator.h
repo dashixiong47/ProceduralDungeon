@@ -45,7 +45,7 @@ public:
 	 * @return The room data asset used to instantiate the new room instance (must not be null)
 	 */
 	UFUNCTION(BlueprintNativeEvent, Category = "Dungeon Generator", meta = (DisplayName = "Choose Next Room", ReturnDisplayName = "Room Data", AutoCreateRefTerm = "DoorIndex"))
-	URoomData* ChooseNextRoomData(const URoomData* CurrentRoom, const TScriptInterface<IReadOnlyRoom>& CurrentRoomInstance, const FDoorDef& DoorData, int& DoorIndex);
+	URoomData* ChooseNextRoomData(const URoomData* CurrentRoom, const FDoorDef& DoorData, int& DoorIndex);
 
 	// Condition to validate a dungeon Generation
 	UFUNCTION(BlueprintNativeEvent, Category = "Dungeon Generator", meta = (DisplayName = "Is Valid Dungeon"))

@@ -137,7 +137,7 @@ bool ADungeonGenerator::AddNewRooms(URoom& ParentRoom, TArray<URoom*>& AddedRoom
 		{
 			nbTries--;
 			bDiscardRoom = false;
-			URoomData* roomDef = ChooseNextRoomData(ParentRoom.GetRoomData(), &ParentRoom, doorDef, doorIndex);
+			URoomData* roomDef = ChooseNextRoomData(ParentRoom.GetRoomData(), doorDef, doorIndex);
 			if (!IsValid(roomDef))
 			{
 				bDiscardRoom |= bAutoDiscardRoomIfNull;
@@ -234,7 +234,7 @@ URoomData* ADungeonGenerator::ChooseFirstRoomData_Implementation()
 	return nullptr;
 }
 
-URoomData* ADungeonGenerator::ChooseNextRoomData_Implementation(const URoomData* CurrentRoom, const TScriptInterface<IReadOnlyRoom>& CurrentRoomInstance, const FDoorDef& DoorData, int& DoorIndex)
+URoomData* ADungeonGenerator::ChooseNextRoomData_Implementation(const URoomData* CurrentRoom, const FDoorDef& DoorData, int& DoorIndex)
 {
 	DungeonLog_Error("Error: ChooseNextRoomData not implemented");
 	return nullptr;
